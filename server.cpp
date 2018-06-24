@@ -3,25 +3,21 @@
 #include <unistd.h>
 #include <winsock.h>
 #include <ctime>
+#include <iostream>
+#include <string>
+#include <fstream>
+using namespace std;
 // Required for Linux
 //#include <sys/socket.h>
 //#include <sys/types.h>
 //#include <netinet/in.h>
 
-#define TIMEOUT 5
-
 int main() {
 
-    // timer
-    clock_t startTime = clock(); // start time
-    double secondsPassed;
-    
     char* dt;
-
+    char buffer[15] = "";
     char server_message[256];
-    char client_message[256];
     
-
     // create the server socket
     int server_socket = INVALID_SOCKET;
     int client_socket = INVALID_SOCKET;
@@ -52,9 +48,14 @@ int main() {
         printf("listen failed.");
     }
 
+    // Get current time
     time_t now = time(0);
     dt = ctime(&now);
+
+    // print the time
     printf("TCP/IP Server\nCurrent time is: %s", dt);
+
+    // show listening message
     printf("Listening...\n");
 
     // server is always listening for connections
@@ -66,20 +67,25 @@ int main() {
 
         printf("Connected to client!\n");
 
-        // Listen for response from client
-        while((read_size = recv(client_socket, client_message, sizeof(client_message), 0)) > 0) {
-
-            // print client message
-            printf("\nClient says: %s", client_message);
-            
+        // create file
+        FILE *fp;
+        
+        while((read_size = recv(client_socket, buffer, sizeof(buffer), 0)) > 0) {
+            // print client message and write to file
+            fp = fopen("output.txt", "a+");
+            fprintf(fp, buffer);
+            printf("\nClient says: %s", buffer);
+            fclose(fp);
+            memset(buffer, 0, sizeof(buffer));
         }
+
+        // client is no longer connected
 
         printf("\nListening...");
     }
 
     // close the socket
     close(server_socket);
-
 
     return 0;
 }
